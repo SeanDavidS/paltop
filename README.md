@@ -3,7 +3,7 @@
 **A dashboard for the admin and a web page for the players of a
 [Palworld](https://www.pocketpair.jp/palworld) dedicated server in Docker.**
 
-To be clear, this has been coded using AI.
+*To be clear, this has been coded/made using AI.*
 Paltop comes in two parts. Install one of them, or both:
 
 - **Paltop terminal** is for the person who runs the server. It is a
