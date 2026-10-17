@@ -20,8 +20,10 @@ Both read the server's REST API, Docker and the save files, and the
 background collector records the server's history for both. Everything is
 plain Python 3 with no packages to install.
 
+Paltop terminal:
 ![Paltop terminal](docs/images/terminal-tour.gif)
 
+Paltop web:
 ![Paltop web: team builder](docs/images/web-team-builder.gif)
 
 *The names in all screenshots are made up.*
