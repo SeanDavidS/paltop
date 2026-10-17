@@ -1,0 +1,31 @@
+# your data: history database, caches, certificate, users, admin log
+/state/
+
+# built or downloaded at install (core/oodle/build.sh)
+/core/oodle/ooz/
+/core/oodle/libooz.so
+
+# release archives (tools/package.sh)
+/dist/
+
+# private notes
+/ROADMAP.md
+
+__pycache__/
+*.pyc
+
+# never, wherever they end up: databases, keys and certificates, snapshots,
+# logs and local settings
+*.db
+*.db-*
+*.db.migrated
+*.sqlite*
+*.pem
+*.key
+*.crt
+web.json
+admin.log
+*.log
+.env
+*.sav
+*.pak

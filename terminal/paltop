@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# paltop - btop-style dashboard for the Palworld server (read-only).
+exec python3 "$(dirname "$(readlink -f "$0")")/paltop.py" "$@"

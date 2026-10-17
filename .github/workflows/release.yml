@@ -1,0 +1,30 @@
+name: Release
+
+# Push a tag like v1.0.0 (matching VERSION) to publish a release with the
+# three archives: paltop-terminal, paltop-web and paltop (both).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check that the tag matches VERSION
+        run: |
+          test "${GITHUB_REF_NAME#v}" = "$(cat VERSION)" || {
+              echo "tag $GITHUB_REF_NAME does not match VERSION $(cat VERSION)"
+              exit 1
+          }
+      - name: Build the archives
+        run: tools/package.sh
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/*.tar.gz \
+              --title "Paltop $GITHUB_REF_NAME" --generate-notes

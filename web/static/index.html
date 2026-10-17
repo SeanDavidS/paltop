@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Paltop web</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div id="login" class="hidden">
+  <form id="login-form" class="box login-box" autocomplete="on">
+    <div class="box-title"><span>Paltop web</span></div>
+    <p>Log in with your in-game name and your own password.</p>
+    <input id="login-name" type="text" name="username" placeholder="in-game name" autocomplete="username" maxlength="40" required>
+    <input id="pw" type="password" name="password" placeholder="password" autocomplete="current-password" required>
+    <button type="submit" class="btn primary">Log in</button>
+    <p id="login-msg" class="crit"></p>
+    <p class="login-switch"><a href="#" id="to-register">New here? Make a user</a></p>
+  </form>
+  <form id="reg1-form" class="box login-box hidden" autocomplete="off">
+    <div class="box-title"><span>new user</span></div>
+    <p>First type the <b>server password</b> - the one you type to join the game.</p>
+    <input id="reg-server" type="password" name="server-password" placeholder="server password" autocomplete="off" required>
+    <button type="submit" class="btn primary">Continue</button>
+    <p id="reg1-msg" class="crit"></p>
+    <p class="login-switch"><a href="#" class="to-login">I already have a user - log in</a></p>
+  </form>
+  <form id="reg2-form" class="box login-box hidden" autocomplete="on">
+    <div class="box-title"><span>new user</span></div>
+    <p>Type your name <b>exactly as it is in the game</b>, and choose a password of your own
+      (at least 6 characters). Your user is linked to your player on the server.</p>
+    <input id="reg-name" type="text" name="username" placeholder="in-game name" autocomplete="username" maxlength="40" required>
+    <input id="reg-pw" type="password" name="new-password" placeholder="choose your password" autocomplete="new-password" required>
+    <input id="reg-pw2" type="password" name="new-password2" placeholder="your password again" autocomplete="new-password" required>
+    <button type="submit" class="btn primary">Make my user</button>
+    <p id="reg2-msg" class="crit"></p>
+    <p class="login-switch"><a href="#" class="to-login">I already have a user - log in</a></p>
+  </form>
+</div>
+
+<div id="notice" class="hidden">
+  <div class="box login-box">
+    <div class="box-title"><span id="notice-title">paltop</span></div>
+    <p id="notice-text"></p>
+    <button id="notice-ok" class="btn primary">OK</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <section id="server" class="box box-cpu">
+    <div class="box-title"><span>server</span><span class="right" id="clock"></span></div>
+    <div class="server-grid">
+      <div class="server-left">
+        <div id="srv-name" class="value bold"></div>
+        <div id="srv-line2" class="label"></div>
+        <div id="srv-line3" class="label"></div>
+        <div id="srv-status"></div>
+      </div>
+      <div class="server-right">
+        <div class="meter-row"><span class="label">players</span><span class="meter" id="m-players"></span><span id="t-players" class="value bold"></span></div>
+        <div class="meter-row"><span class="label">fps</span><span class="meter" id="m-fps"></span><span id="t-fps" class="value"></span></div>
+        <canvas id="fps-spark" height="30"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <nav id="tabs">
+    <button class="tab" data-tab="overview"><u>o</u>verview</button>
+    <button class="tab" data-tab="pals">pa<u>l</u>s</button>
+    <button class="tab" data-tab="palpedia"><u>p</u>alpedia</button>
+    <button class="tab" data-tab="traitpedia"><u>t</u>raitpedia</button>
+    <button class="tab" data-tab="bases"><u>b</u>ases</button>
+    <button class="tab" data-tab="crashes">crashes (<u>x</u>)</button>
+    <button class="tab" data-tab="battles">b<u>a</u>ttles</button>
+    <button class="tab" data-tab="achievements">ac<u>h</u>ievements</button>
+    <button class="tab" data-tab="quests"><u>q</u>uests</button>
+    <span class="spacer"></span>
+    <span id="stale" class="warn hidden">data is old - is the collector running?</span>
+    <label class="fx-pick" title="background effects"><span>fx</span>
+      <select id="fx-mode">
+        <option value="off">off</option>
+        <option value="abilities">abilities</option>
+        <option value="battles">battles</option>
+      </select></label>
+    <span id="me" class="label"></span>
+    <button id="logout" class="btn small">log out</button>
+  </nav>
+
+  <div id="online-bar" class="online-bar hidden"></div>
+
+  <main>
+    <div id="tab-overview" class="tabpage">
+      <section id="alerts-box" class="box box-proc hidden">
+        <div class="box-title"><span>alerts</span></div>
+        <ul id="alerts"></ul>
+      </section>
+      <section class="box box-proc">
+        <div class="box-title"><span>players</span><span class="right" id="players-count"></span></div>
+        <table class="grid" id="players-table"></table>
+      </section>
+      <section class="box box-net">
+        <div class="box-title"><span>last 24 hours</span></div>
+        <div class="chart-label label">server fps</div>
+        <canvas id="chart-fps" class="chart" height="70"></canvas>
+        <div class="chart-label label">players online</div>
+        <canvas id="chart-players" class="chart" height="70"></canvas>
+      </section>
+    </div>
+
+    <div id="tab-pals" class="tabpage hidden">
+      <section class="box box-proc">
+        <div class="box-title"><span>pals</span><span class="right" id="pals-count"></span></div>
+        <div class="chips" id="pal-players"></div>
+        <nav class="subnav" id="pal-subnav">
+          <button data-view="list">Pals</button>
+          <button data-view="team">Team builder</button>
+          <button data-view="breed">Breeding</button>
+          <button data-view="boss">Boss planner</button>
+        </nav>
+
+        <div id="pal-view">
+          <div class="controls">
+            <label class="field grow"><span>search</span>
+              <input id="pal-search" class="search" type="search" placeholder="name, passive, partner skill, element..." autocomplete="off"></label>
+            <button class="switch" id="pal-skills" title="also search the active skills and the statuses they apply (Burn, Soak, Blind, ...)">include active skills</button>
+            <label class="field"><span>sort by</span><select id="pal-sort"></select></label>
+            <label class="field"><span>show</span><select id="pal-filter"></select></label>
+            <button class="switch" id="pal-level" title="score the Pals as if they were levelled to the player's level">as if levelled up</button>
+          </div>
+          <span id="pal-sorts" class="hidden"></span><span id="pal-filters" class="hidden"></span>
+          <button class="hidden" id="team-open"></button><button class="hidden" id="breed-open"></button>
+          <div class="split">
+            <div class="list-col">
+              <div class="pager" id="pal-pager-top"></div>
+              <div class="list-wrap"><table class="grid" id="pal-list"></table></div>
+              <div class="pager" id="pal-pager"></div>
+            </div>
+            <div id="pal-detail" class="detail card"></div>
+          </div>
+        </div>
+
+        <div id="plan-view" class="hidden">
+          <div class="controls">
+            <button class="btn" id="plan-back">&larr; back to the list</button>
+            <label class="field"><span>goal</span><span class="stepper">
+              <button class="btn icon" id="plan-prev" title="previous goal">&#9664;</button>
+              <select id="plan-goal"></select>
+              <button class="btn icon" id="plan-next" title="next goal">&#9654;</button></span></label>
+            <button class="switch" id="plan-level" title="score as if levelled to the player's level">as if levelled up</button>
+            <span class="spacer"></span>
+            <button class="btn primary" id="plan-best">use the best set</button>
+            <button class="btn" id="plan-reset">its own passives</button>
+          </div>
+          <details class="help"><summary>how it works</summary>
+            Try out passive skills on this Pal: press <b>change</b> on a slot to pick one, and see what it does to the
+            score for the goal. paltop also works out the best set of four, and where you can get each one.
+            Passives are passed on by breeding, so a child can get them from either parent.</details>
+          <div id="plan-head" class="card"></div>
+          <div class="card"><h3>passive slots</h3><table class="grid" id="plan-slots"></table>
+            <div id="plan-choose-bar" class="controls hidden">
+              <label class="field grow"><span>search</span><input id="plan-search" class="search" type="search" placeholder="search passives..." autocomplete="off"></label>
+            </div>
+            <div id="plan-choose" class="choose hidden"></div></div>
+          <div id="plan-info" class="detail card"></div>
+        </div>
+
+        <div id="breed-view" class="hidden">
+          <button class="hidden" id="breed-back"></button>
+          <details class="help"><summary>how it works</summary>
+            Which of this player's Pals to use for breeding. These effects come from partner skills and do not stack,
+            so only the best one of each counts - the one with the most condenser stars.</details>
+          <div id="breed-body" class="detail"></div>
+        </div>
+
+        <div id="boss-view" class="hidden">
+          <details class="help"><summary>how it works</summary>
+            Pick a boss to see which of this player's Pals do best against it. For each Pal paltop works out the
+            damage it does each turn with its equipped skills, how many turns it lasts against the boss's skills,
+            and from that the <b>share</b> of the boss's HP it takes on its own (100% = it wins alone). The best
+            ones are also fought out 40 times in paltop's battle model for a <b>win %</b>. The game's data does not
+            have the bosses' extra HP or the tower and raid levels, so pick those yourself: towers and raids start
+            at the player's level, field bosses at their spawn level. Hard mode towers and raids are their own, stronger
+            forms with more skills, and the save keeps hard mode tower wins apart from normal ones.</details>
+          <div class="controls">
+            <label class="field grow"><span>search</span>
+              <input id="boss-search" class="search" type="search" placeholder="boss, Pal or region..." autocomplete="off"></label>
+            <label class="field"><span>show</span><select id="boss-kind">
+              <option value="">all bosses</option><option value="tower">towers</option>
+              <option value="raid">raids</option><option value="field">field bosses</option>
+              <option value="hard">hard mode</option><option value="normal">normal mode</option></select></label>
+            <button class="switch" id="boss-todo" title="only bosses this player has not beaten">not beaten yet</button>
+          </div>
+          <div class="split">
+            <div class="list-col"><div class="list-wrap"><table class="grid" id="boss-list"></table></div></div>
+            <div class="detail">
+              <div class="controls">
+                <label class="field"><span>boss level</span><input id="boss-level" type="number" min="1" max="80" class="num-in"></label>
+                <label class="field"><span>boss HP &times;</span><select id="boss-hp"></select></label>
+                <button class="switch" id="boss-hard" title="Pals that are awkward to summon, such as Panthalus">include hard-to-summon Pals</button>
+              </div>
+              <div id="boss-body"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="team-view" class="hidden">
+          <button class="hidden" id="team-back"></button>
+          <div class="controls">
+            <label class="field"><span>goal</span><span class="stepper">
+              <button class="btn icon" id="goal-prev" title="previous goal">&#9664;</button>
+              <select id="goal"></select>
+              <button class="btn icon" id="goal-next" title="next goal">&#9654;</button></span></label>
+            <label class="field"><span>count passives</span><span id="team-modes" class="segmented"></span></label>
+          </div>
+          <div class="controls">
+            <button class="switch" id="team-level" title="score as if levelled to the player's level">as if levelled up</button>
+            <button class="switch" id="team-hard" title="Pals that are awkward to summon, such as Panthalus">include hard-to-summon Pals</button>
+            <span class="spacer"></span>
+            <button class="btn" id="team-fill" title="put the best Pals for the goal in the empty slots">fill empty slots with the best</button>
+            <button class="btn" id="team-reset">empty the team</button>
+          </div>
+          <div id="team-wishes" class="card wishes"></div>
+          <details class="help" id="team-help"><summary>how it works</summary>
+            The team starts empty: press <b>choose</b> on a slot to pick a Pal for it, or <b>fill empty slots with the
+            best</b> to let paltop fill the rest for the goal. In the choose list, the numbers in brackets are how much
+            better (green) or worse (red) each Pal is than the one in the slot now, and <b>compare</b> opens both side by
+            side. <b>plan</b> opens the passive planner for a Pal. Pick <b>wishes</b> - mounts, elements, roles - and paltop
+            suggests a team that has each of them (one Pal can meet several), with the rest the best for the goal. <b>count passives</b>
+            decides which passives the Pals are scored with: what they have, your plans, or their best possible set.</details>
+          <table class="grid team" id="team-table"></table>
+          <div id="choose-bar" class="controls hidden">
+            <label class="field grow"><span>search</span><input id="choose-search" class="search" type="search" placeholder="search the candidates..." autocomplete="off"></label>
+            <button class="switch" id="choose-skills" title="also search the active skills and the statuses they apply (Burn, Soak, Blind, ...)">include active skills</button>
+            <label class="field"><span>sort by</span><select id="choose-sort"></select></label>
+          </div>
+          <div id="team-choose" class="choose hidden"></div>
+          <div id="team-recs" class="card hidden"></div>
+          <div id="team-info" class="detail card"></div>
+        </div>
+      </section>
+    </div>
+
+    <dialog id="cmp-modal" class="modal">
+      <div class="modal-head"><h3 id="cmp-title">compare</h3><button class="btn small" id="cmp-close">close</button></div>
+      <div id="cmp-body"></div>
+    </dialog>
+
+    <div id="tab-palpedia" class="tabpage hidden">
+      <section class="box box-proc">
+        <div class="box-title"><span>palpedia</span><span class="right" id="pedia-count"></span></div>
+        <div class="controls">
+          <label class="field grow"><span>search</span>
+            <input id="pedia-search" class="search" type="search" placeholder="name, number, element, work, partner skill..." autocomplete="off"></label>
+          <button class="switch" id="pedia-skills" title="also search the active skills and the statuses they apply (Burn, Soak, Blind, ...)">include active skills</button>
+          <label class="field"><span>sort by</span><select id="pedia-sort"></select></label>
+          <label class="field"><span>show</span><select id="pedia-show"></select></label>
+          <label class="field"><span>element / job</span><select id="pedia-kind"></select></label>
+          <button class="switch" id="pedia-spoilers" title="also show the Pals nobody on the server has found yet">spoilers</button>
+          <button class="btn primary" id="pedia-race-btn" title="who has found the most Pals">Paldeck race</button>
+        </div>
+        <div id="pedia-race" class="race hidden"></div>
+        <div class="split">
+          <div class="list-col">
+            <div class="ref-bar hidden" id="pedia-ref-bar"></div>
+            <div class="pager" id="pedia-pager-top"></div>
+            <div class="list-wrap"><table class="grid" id="pedia-list"></table></div>
+            <div class="pager" id="pedia-pager"></div>
+          </div>
+          <div id="pedia-detail" class="detail card"></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="tab-traitpedia" class="tabpage hidden">
+      <section class="box box-proc">
+        <div class="box-title"><span>traitpedia</span><span class="right" id="trait-count"></span></div>
+        <div class="controls">
+          <label class="field grow"><span>search</span>
+            <input id="trait-search" class="search" type="search" placeholder="trait, effect, species, implant, player..." autocomplete="off"></label>
+          <label class="field"><span>sort by</span><select id="trait-sort">
+            <option value="tier">tier</option><option value="name">name</option>
+            <option value="price">surgery price</option><option value="server">most on the server</option>
+            <option value="mine">most of mine</option></select></label>
+          <label class="field"><span>show</span><select id="trait-show">
+            <option value="all">all traits</option><option value="good">good traits</option>
+            <option value="bad">bad traits</option><option value="random">can appear on any Pal</option>
+            <option value="surgery">at the surgery table</option><option value="disposable">needs a Disposable Implant</option>
+            <option value="born">born with a species</option><option value="server">on the server</option>
+            <option value="mine">my Pals have it</option><option value="notmine">my Pals do not have it</option></select></label>
+          <label class="field"><span>good for</span><select id="trait-use"><option value="">anything</option></select></label>
+        </div>
+        <details class="help"><summary>how it works</summary>
+          Every trait (passive skill) a Pal can have, from the game's own data. <b>Tier</b> is the game's rank:
+          I-III the usual good ones, rainbow and World Tree the best, and the bad ones below zero. <b>Where</b>:
+          <b>random</b> can appear on any Pal you catch or breed, <b>born with</b> means every Pal of those species has it,
+          and the <b>surgery table</b> implants it for gold - some also need an implant: an <b>Implant</b> is a key item
+          you keep, a <b>Disposable Implant</b> is used up (the Ancient Relic Recycler gives them). Parents pass their traits on
+          when breeding, so a trait a Pal on the server has can be bred over.</details>
+        <div class="split">
+          <div class="list-col"><div class="list-wrap"><table class="grid" id="trait-list"></table></div></div>
+          <div id="trait-detail" class="detail card"></div>
+        </div>
+      </section>
+    </div>
+
+    <div id="tab-quests" class="tabpage hidden">
+      <section class="box box-proc">
+        <div class="box-title"><span>quests</span><span class="right" id="quest-count"></span></div>
+        <div class="chips" id="quest-players"></div>
+        <div class="controls">
+          <label class="field grow"><span>search</span>
+            <input id="quest-search" class="search" type="search" placeholder="quest, description, who gives it..." autocomplete="off"></label>
+          <button class="switch" id="quest-hide" title="hide the quests this player has done">hide done</button>
+        </div>
+        <details class="help"><summary>how it works</summary>
+          Every quest in the game and whether the picked player has done it, from their save: a check mark and grey text
+          when it is done, <b>in progress</b> when they have taken it on. The story is in the order the game hands it
+          out; side quests are grouped by who gives them. Hover a quest for what it asks, and who else on the server has
+          done it. The save is read when the game saves, so a quest done just now can take a few minutes to show.</details>
+        <div id="quest-body"></div>
+      </section>
+    </div>
+
+    <div id="tab-battles" class="tabpage hidden">
+      <section class="box box-proc">
+        <div class="box-title"><span>battles</span><span class="right">two players' Pals, fighting with their real stats and skills</span></div>
+        <div class="controls">
+          <span class="segmented" id="battle-mode">
+            <button class="active" data-battle-mode="auto" title="battles between players' Pals that play by themselves">auto</button>
+            <button data-battle-mode="manual" title="fight yourself: pick your Pals and their skills">manual</button>
+          </span>
+        </div>
+        <div class="controls">
+          <span class="label">Pals a side</span>
+          <span class="btn-group">
+            <button class="btn small active" data-battle-size="any">random</button>
+            <button class="btn small" data-battle-size="1">1 v 1</button>
+            <button class="btn small" data-battle-size="2">2 v 2</button>
+            <button class="btn small" data-battle-size="3">3 v 3</button>
+          </span>
+          <button class="btn" id="battle-pause" title="stop the battle where it is, and go on later">pause</button>
+          <button class="btn" id="battle-next">new battle</button>
+          <span class="spacer"></span>
+          <button class="switch" id="music-on" title="retro battle music while this tab is open">music</button>
+          <button class="switch" id="sounds-on" title="a sound for every skill, hit and faint in the battle">sounds</button>
+          <label class="field music-vol" title="volume of the music and the sounds"><input id="music-vol" type="range" min="0" max="100" step="5"></label>
+        </div>
+        <div id="duel-pick" class="duel-pick hidden"></div>
+        <div class="battle-stage" id="battle-stage"></div>
+        <div id="duel-move" class="duel-move hidden"></div>
+        <h3>what happened</h3>
+        <div class="battle-log" id="battle-log"></div>
+      </section>
+    </div>
+
+    <div id="tab-achievements" class="tabpage hidden">
+      <section class="box box-mem">
+        <div class="box-title"><span>achievements</span><span class="right" id="ach-count"></span></div>
+        <div class="ach-top">
+          <div><h3>points</h3><table class="grid" id="ach-board"></table></div>
+          <div><h3>latest unlocks</h3><div id="ach-feed" class="ach-feed"></div>
+            <h3>server firsts</h3><div id="ach-firsts" class="ach-feed"></div></div>
+        </div>
+        <div class="chips" id="ach-players"></div>
+        <div class="ach-grid" id="ach-grid"></div>
+        <p class="dim" id="ach-note"></p>
+      </section>
+    </div>
+
+    <div id="tab-bases" class="tabpage hidden">
+      <section class="box box-mem">
+        <div class="box-title"><span>bases</span><span class="right" id="bases-count"></span></div>
+        <table class="grid" id="bases-table"></table>
+        <h3 class="label bold" id="trouble-title">workers needing attention</h3>
+        <table class="grid" id="trouble-table"></table>
+      </section>
+    </div>
+
+    <div id="tab-crashes" class="tabpage hidden">
+      <section class="box box-cpu">
+        <div class="box-title"><span>crash log</span><span class="right" id="crash-count"></span></div>
+        <div id="crash-list"></div>
+      </section>
+    </div>
+  </main>
+</div>
+<button id="chat-btn" class="chat-fab hidden" title="chat with the players in the game (c)">chat <span id="chat-unread" class="chat-badge hidden"></span></button>
+<div id="chat-panel" class="chat-panel hidden" role="dialog" aria-label="chat">
+  <div id="chat-grip" class="chat-grip" title="drag to make the chat bigger or smaller"></div>
+  <div class="chat-head"><b>chat</b> <span class=dim>&middot; the game and this page</span>
+    <span class="spacer"></span><button class="btn small" id="chat-mute" title="sound for new messages: on"></button>
+    <button class="btn small" id="chat-close" title="close (Esc)">close</button></div>
+  <div id="chat-log" class="chat-log"></div>
+  <form id="chat-form" class="chat-form" autocomplete="off">
+    <input id="chat-input" class="search" maxlength="200" placeholder="write to everyone in the game...">
+    <button class="btn primary" id="chat-send">send</button>
+  </form>
+  <div id="chat-msg" class="dim chat-note">shows in the game as <b>[web] your name: message</b></div>
+</div>
+<div id="chat-toasts" class="chat-toasts"></div>
+<script src="/music.js"></script>
+<script src="/app.js"></script>
+<script src="/bg.js"></script>
+</body>
+</html>

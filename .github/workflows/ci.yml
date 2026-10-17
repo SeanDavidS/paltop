@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Compile every Python file
+        run: python -m compileall -q core terminal web
+      - name: Import the modules
+        run: |
+          cd core
+          for m in palpaths palpals palteam palbattle palboss palpedia \
+                   paltraits palquests palchat palachieve palcrash palstore; do
+              python -c "import $m" || exit 1
+          done
+      - name: Check the shell scripts
+        run: |
+          bash -n install.sh
+          bash -n tools/package.sh
+          bash -n core/oodle/build.sh
+          bash -n terminal/paltop
+      - name: Build the release archives
+        run: tools/package.sh

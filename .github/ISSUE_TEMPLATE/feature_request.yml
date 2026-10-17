@@ -1,0 +1,20 @@
+name: Idea or feature request
+description: Something Paltop could show or do
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part?
+      options:
+        - Paltop terminal
+        - Paltop web
+        - both
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like, and what would you use it for?
+    validations:
+      required: true

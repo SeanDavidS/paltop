@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in Paltop terminal or Paltop web does not work
+labels: [bug]
+body:
+  - type: dropdown
+    id: part
+    attributes:
+      label: Which part?
+      options:
+        - Paltop terminal
+        - Paltop web
+        - both, or the installer
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen
+      placeholder: |
+        1. open the Pals tab
+        2. ...
+  - type: input
+    id: version
+    attributes:
+      label: Paltop version (the VERSION file) and Palworld server version
+      placeholder: Paltop 1.0.0, Palworld v1.0.5
+  - type: input
+    id: system
+    attributes:
+      label: Linux distribution and Python version
+      placeholder: Debian 13, Python 3.13
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output
+      description: >
+        For example from `journalctl --user -u paltop-web` or
+        `paltop-collector`. Please remove player names, IP addresses and
+        passwords first.
+      render: text
